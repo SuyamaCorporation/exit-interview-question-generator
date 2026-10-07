@@ -1,0 +1,1 @@
+Generates 10 tailored exit interview questions by departure reason, with per-question response notes, positive/neutral/negative sentiment toggles, localStorage persistence, and anonymized HR summary export.

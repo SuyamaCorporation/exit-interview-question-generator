@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Exit Interview Question Generator & Response Log</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-purple-50 to-violet-100 font-sans">
+
+<div class="max-w-3xl mx-auto px-4 py-8">
+  <header class="mb-8 text-center">
+    <h1 class="text-3xl font-bold text-violet-800">🚪 Exit Interview Question Generator</h1>
+    <p class="text-violet-500 mt-1">Tailored questions and a response log for meaningful exit conversations.</p>
+  </header>
+
+  <!-- Departure Reason -->
+  <section class="bg-white rounded-2xl shadow-md p-6 mb-6" aria-label="Departure reason selector">
+    <h2 class="text-lg font-semibold text-violet-700 mb-3">Departure Reason</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2" role="radiogroup" aria-label="Select departure reason">
+      <button class="reason-btn px-3 py-2 rounded-xl border-2 border-gray-200 text-sm font-medium text-gray-600 hover:border-violet-400 transition" data-val="new-role">🆕 New Role</button>
+      <button class="reason-btn px-3 py-2 rounded-xl border-2 border-gray-200 text-sm font-medium text-gray-600 hover:border-violet-400 transition" data-val="relocation">📍 Relocation</button>
+      <button class="reason-btn px-3 py-2 rounded-xl border-2 border-gray-200 text-sm font-medium text-gray-600 hover:border-violet-400 transition" data-val="management">👔 Management Issues</button>
+      <button class="reason-btn px-3 py-2 rounded-xl border-2 border-gray-200 text-sm font-medium text-gray-600 hover:border-violet-400 transition" data-val="compensation">💰 Compensation</button>
+      <button class="reason-btn px-3 py-2 rounded-xl border-2 border-gray-200 text-sm font-medium text-gray-600 hover:border-violet-400 transition" data-val="burnout">🔥 Burnout</button>
+      <button class="reason-btn px-3 py-2 rounded-xl border-2 border-gray-200 text-sm font-medium text-gray-600 hover:border-violet-400 transition" data-val="career">🌱 Career Change</button>
+      <button class="reason-btn px-3 py-2 rounded-xl border-2 border-gray-200 text-sm font-medium text-gray-600 hover:border-violet-400 transition col-span-2 sm:col-span-1" data-val="other">❓ Other</button>
+    </div>
+    <button onclick="generateQuestions()"
+      class="mt-4 w-full bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-lg px-4 py-3 transition"
+      aria-label="Generate tailored exit interview questions">
+      Generate Questions
+    </button>
+    <p id="reasonError" class="hidden text-red-500 text-sm mt-2">Please select a departure reason first.</p>
+  </section>
+
+  <!-- Questions & Response Log -->
+  <section id="questionsSection" class="hidden" aria-label="Exit interview questions and responses">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-lg font-semibold text-violet-700">Interview Questions & Response Log</h2>
+      <button onclick="exportSummary()"
+        class="text-sm bg-violet-100 hover:bg-violet-200 text-violet-700 px-3 py-1.5 rounded-lg font-medium transition"
+        aria-label="Export anonymized HR summary as plain text">⬇ Export HR Summary</button>
+    </div>
+    <p id="copyMsg" class="hidden text-green-600 text-sm mb-2 font-medium">✓ Exported!</p>
+    <div id="questionsList" class="space-y-4"></div>
+  </section>
+</div>
+
+<script>
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  const QUESTIONS = {
+    'new-role': [
+      "What ultimately led you to start looking for a new opportunity?",
+      "What does your new role offer that you felt was missing here?",
+      "Were there any moments when you felt this company could have retained you?",
+      "How did you feel about growth opportunities during your time here?",
+      "What aspects of the work culture did you value most?",
+      "Were your skills fully utilized in your role? If not, how could that have changed?",
+      "How would you describe the onboarding experience when you joined?",
+      "What would you tell a friend considering joining this organization?",
+      "Did you feel recognized and appreciated for your contributions?",
+      "Is there anything leadership could have done differently to keep you engaged?"
+    ],
+    relocation: [
+      "Was remote or hybrid work ever offered as an alternative to relocating?",
+      "Did the organization do enough to support your flexibility needs?",
+      "Were there any internal transfer opportunities that could have helped?",
+      "How did your personal circumstances influence your decision?",
+      "Did management handle your transition timeline respectfully?",
+      "What do you wish had been handled differently in the offboarding process?",
+      "How would you rate the support systems available to employees with life changes?",
+      "Were you satisfied with the work-life balance policies here?",
+      "Did you feel comfortable discussing personal needs with your manager?",
+      "What would have made it easier to stay with the organization?"
+    ],
+    management: [
+      "Can you describe specific incidents that affected your experience with management?",
+      "Did you ever raise concerns through HR or other channels? What happened?",
+      "How would you describe the feedback culture in your team?",
+      "Did you feel psychological safety to speak up when you disagreed?",
+      "What management behaviors had the most positive impact on you?",
+      "How did your manager support (or hinder) your professional development?",
+      "Were expectations and responsibilities clearly communicated to you?",
+      "How were conflicts or disagreements typically handled on your team?",
+      "Did you feel the organization had an effective process for addressing manager conduct?",
+      "What one change in management style would have improved your experience most?"
+    ],
+    compensation: [
+      "Were your compensation concerns ever raised with HR or your manager?",
+      "Did you feel your pay reflected your market value and contributions?",
+      "Were non-salary benefits (equity, PTO, health) competitive in your view?",
+      "How transparent did you find the company's pay bands and leveling?",
+      "Were performance reviews linked fairly to compensation changes?",
+      "Did you feel the compensation review process was consistent and fair?",
+      "Were there specific milestones where you expected a raise that didn't happen?",
+      "How did total compensation compare to what the new role is offering?",
+      "Did you feel comfortable advocating for yourself in salary conversations?",
+      "What compensation-related change would have influenced your decision to stay?"
+    ],
+    burnout: [
+      "When did you first start feeling burned out, and what were the warning signs?",
+      "Did you feel comfortable taking time off when needed?",
+      "Was your workload sustainable over the long term?",
+      "Were there any resources or support systems that could have helped but weren't available?",
+      "Did your manager recognize or acknowledge signs of overwork?",
+      "How often were you expected to be available outside of work hours?",
+      "Did you feel able to set boundaries without negative consequences?",
+      "Were there periods of high stress that could have been better managed organizationally?",
+      "Did you receive enough support during peak workload periods?",
+      "What structural changes would have helped prevent your burnout?"
+    ],
+    career: [
+      "How did your career goals evolve during your time here?",
+      "Did the organization provide enough learning and development opportunities?",
+      "Were there clear career paths available to you in your role?",
+      "Did you have a mentor or sponsor within the organization?",
+      "What skills do you hope to develop in your next chapter?",
+      "Were internal mobility and transfer options accessible and visible?",
+      "How often did you discuss career development with your manager?",
+      "Did you feel your long-term goals were understood and supported?",
+      "What would an ideal career development program have looked like here?",
+      "What one investment in your career would have encouraged you to stay?"
+    ],
+    other: [
+      "In your own words, what was the primary reason for your departure?",
+      "What aspects of the role or company did you find most fulfilling?",
+      "Were there any unresolved issues that contributed to your decision?",
+      "How did you feel about the overall direction of the company?",
+      "Were team dynamics and collaboration generally positive?",
+      "Did you feel aligned with the company's mission and values?",
+      "How was your relationship with your immediate team?",
+      "Were there systemic issues you feel the organization should address?",
+      "What do you think differentiates great companies from this one?",
+      "Is there anything you'd like leadership to hear as you leave?"
+    ]
+  };
+
+  const SENTIMENT_CONFIG = {
+    positive: { label: '😊 Positive', bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-300' },
+    neutral:  { label: '😐 Neutral',  bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-300' },
+    negative: { label: '😟 Negative', bg: 'bg-red-100',   text: 'text-red-700',   border: 'border-red-300' }
+  };
+
+  let currentReason = null;
+
+  document.querySelectorAll('.reason-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentReason = btn.dataset.val;
+      document.querySelectorAll('.reason-btn').forEach(b => {
+        b.classList.remove('bg-violet-500', 'text-white', 'border-violet-500');
+        b.classList.add('border-gray-200', 'text-gray-600');
+      });
+      btn.classList.add('bg-violet-500', 'text-white', 'border-violet-500');
+      btn.classList.remove('border-gray-200', 'text-gray-600');
+      document.getElementById('reasonError').classList.add('hidden');
+    });
+  });
+
+  function storageKey() {
+    return 'exit_interview_' + (currentReason || 'other');
+  }
+
+  function loadAnswers() {
+    return JSON.parse(localStorage.getItem(storageKey()) || '{}');
+  }
+
+  function saveAnswer(idx, text, sentiment) {
+    const answers = loadAnswers();
+    answers[idx] = { text, sentiment };
+    localStorage.setItem(storageKey(), JSON.stringify(answers));
+  }
+
+  function generateQuestions() {
+    if (!currentReason) {
+      document.getElementById('reasonError').classList.remove('hidden');
+      return;
+    }
+    const qs = QUESTIONS[currentReason];
+    const answers = loadAnswers();
+    const section = document.getElementById('questionsSection');
+    section.classList.remove('hidden');
+    const list = document.getElementById('questionsList');
+
+    list.innerHTML = qs.map((q, i) => {
+      const saved = answers[i] || { text: '', sentiment: 'neutral' };
+      const sentConf = SENTIMENT_CONFIG[saved.sentiment] || SENTIMENT_CONFIG.neutral;
+      return `<div class="bg-white rounded-2xl shadow-sm border border-violet-100 p-5">
+        <div class="flex items-start gap-3 mb-3">
+          <span class="bg-violet-100 text-violet-700 text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 mt-0.5">${i+1}</span>
+          <p class="text-gray-800 font-medium text-sm leading-snug">${escapeHtml(q)}</p>
+        </div>
+        <label for="answer_${i}" class="sr-only">Answer for question ${i+1}</label>
+        <textarea id="answer_${i}" rows="3"
+          class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-300 resize-none mb-3"
+          placeholder="Key themes from the interviewee's response…"
+          aria-label="Response notes for question ${i+1}">${escapeHtml(saved.text)}</textarea>
+        <div class="flex gap-2 items-center flex-wrap">
+          <span class="text-xs text-gray-500 font-medium">Sentiment:</span>
+          ${['positive','neutral','negative'].map(s => {
+            const sc = SENTIMENT_CONFIG[s];
+            const active = saved.sentiment === s;
+            return `<button class="sentiment-btn text-xs px-3 py-1 rounded-full border font-medium transition ${active ? sc.bg + ' ' + sc.text + ' ' + sc.border : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-violet-300'}"
+              data-q="${i}" data-val="${s}"
+              aria-label="Mark sentiment as ${s} for question ${i+1}"
+              aria-pressed="${active}">${sc.label}</button>`;
+          }).join('')}
+          <span class="ml-auto" id="saved_${i}">${saved.text ? '<span class="text-green-500 text-xs">✓ saved</span>' : ''}</span>
+        </div>
+      </div>`;
+    }).join('');
+
+    // Attach listeners
+    qs.forEach((_, i) => {
+      const ta = document.getElementById('answer_' + i);
+      const debounce = {};
+      ta.addEventListener('input', () => {
+        clearTimeout(debounce[i]);
+        debounce[i] = setTimeout(() => {
+          const sentiment = getCurrentSentiment(i);
+          saveAnswer(i, ta.value, sentiment);
+          const savedEl = document.getElementById('saved_' + i);
+          if (savedEl) savedEl.innerHTML = '<span class="text-green-500 text-xs">✓ saved</span>';
+        }, 600);
+      });
+    });
+
+    list.querySelectorAll('.sentiment-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const qIdx = parseInt(btn.dataset.q);
+        const val = btn.dataset.val;
+        // Update UI
+        list.querySelectorAll(`.sentiment-btn[data-q="${qIdx}"]`).forEach(b => {
+          const sc = SENTIMENT_CONFIG[b.dataset.val];
+          b.className = `sentiment-btn text-xs px-3 py-1 rounded-full border font-medium transition bg-gray-50 text-gray-500 border-gray-200 hover:border-violet-300`;
+          b.setAttribute('aria-pressed', 'false');
+        });
+        const sc = SENTIMENT_CONFIG[val];
+        btn.className = `sentiment-btn text-xs px-3 py-1 rounded-full border font-medium transition ${sc.bg} ${sc.text} ${sc.border}`;
+        btn.setAttribute('aria-pressed', 'true');
+        const ta = document.getElementById('answer_' + qIdx);
+        saveAnswer(qIdx, ta.value, val);
+      });
+    });
+
+    section.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function getCurrentSentiment(qIdx) {
+    const active = document.querySelector(`.sentiment-btn[data-q="${qIdx}"][aria-pressed="true"]`);
+    return active ? active.dataset.val : 'neutral';
+  }
+
+  function exportSummary() {
+    if (!currentReason) return;
+    const qs = QUESTIONS[currentReason];
+    const answers = loadAnswers();
+    const lines = [
+      'EXIT INTERVIEW SUMMARY (ANONYMIZED)',
+      '=====================================',
+      `Departure Category: ${currentReason.replace('-', ' ').toUpperCase()}`,
+      `Generated: ${new Date().toLocaleDateString()}`,
+      '',
+      '--- RESPONSES ---',
+      ''
+    ];
+    qs.forEach((q, i) => {
+      const a = answers[i] || { text: '', sentiment: 'neutral' };
+      lines.push(`Q${i+1}: ${q}`);
+      lines.push(`Response Themes: ${a.text || '(no response recorded)'}`);
+      lines.push(`Sentiment: ${a.sentiment.toUpperCase()}`);
+      lines.push('');
+    });
+    // Sentiment summary
+    const counts = { positive: 0, neutral: 0, negative: 0 };
+    Object.values(answers).forEach(a => { if (a.sentiment) counts[a.sentiment]++; });
+    lines.push('--- SENTIMENT SUMMARY ---');
+    lines.push(`Positive: ${counts.positive} | Neutral: ${counts.neutral} | Negative: ${counts.negative}`);
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'exit-interview-summary.txt';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+</script>
+</body>
+</html>
